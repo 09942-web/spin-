@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>วงล้อสุ่มชื่อ - Wheel of Names</title>
+<meta name="description" content="แอปวงล้อสุ่มชื่อ วางรายชื่อจาก Excel สุ่มแบ่งกลุ่ม หมุนวงล้อสุ่มชื่อออกจากแต่ละกลุ่ม พร้อมเสียง ใช้งานได้แบบออฟไลน์" />
+<meta name="theme-color" content="#4D96FF" />
+<link rel="manifest" href="./manifest.json" />
+<link rel="icon" href="./icons/icon-192.png" />
+<link rel="apple-touch-icon" href="./icons/icon-192.png" />
+<link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="app">
+    <header>
+      <button id="musicBtn" class="icon-btn left" type="button" aria-label="เปิด/ปิดเพลง" aria-pressed="false">🎵</button>
+      <button id="soundBtn" class="icon-btn" type="button" aria-label="เปิด/ปิดเสียง" aria-pressed="true">🔊</button>
+      <h1>🎡 วงล้อสุ่มชื่อ</h1>
+      <p>วางรายชื่อจาก Excel • สุ่มแบ่งกลุ่ม • หมุนสุ่มชื่อออกจากแต่ละกลุ่ม</p>
+      <button id="installBtn" class="spin-btn" style="padding:8px 18px;font-size:0.85rem;">📲 ติดตั้งแอป</button>
+    </header>
+
+    <!-- Group tabs (shown only when there is more than one group) -->
+    <nav id="groupTabs" class="group-tabs" aria-label="เลือกกลุ่ม"></nav>
+
+    <div class="group-head">
+      <div class="group-head-text">
+        <div id="groupTitle" class="group-title">วงล้อ</div>
+        <div id="groupSub" class="group-sub"></div>
+      </div>
+      <div class="group-head-actions">
+        <button id="renameBtn" class="mini-btn" type="button">✏️ ตั้งชื่อ</button>
+        <button id="deleteGroupBtn" class="mini-btn danger" type="button">🗑 ลบกลุ่ม</button>
+      </div>
+    </div>
+
+    <div class="wheel-wrap">
+      <div class="pointer" id="pointer"></div>
+      <canvas id="wheelCanvas"></canvas>
+      <div class="hub">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="10" fill="#FFD93D"/>
+        </svg>
+      </div>
+    </div>
+
+    <button id="spinBtn" class="spin-btn">🎯 หมุนวงล้อ</button>
+
+    <!-- Drawn (picked out) list for the active group -->
+    <div id="drawnPanel" class="panel" style="display:none;">
+      <h2>✅ สุ่มออกมาแล้ว (<span id="drawnCount">0</span>)</h2>
+      <ol id="drawnList" class="drawn-list"></ol>
+      <div class="panel-footer">
+        <span></span>
+        <button id="restoreAllBtn" type="button">ใส่กลับเข้าวงทั้งหมด</button>
+      </div>
+    </div>
+
+    <!-- Excel paste + random split -->
+    <div class="panel">
+      <h2>📋 วางรายชื่อจาก Excel</h2>
+      <textarea id="bulkInput" rows="5" spellcheck="false" placeholder="คัดลอกคอลัมน์ชื่อจาก Excel แล้ววางที่นี่ (1 แถว = 1 ชื่อ)&#10;วางได้ยาวเป็นร้อยเป็นพันชื่อ"></textarea>
+      <div id="bulkInfo" class="bulk-info">ยังไม่ได้วางรายชื่อ</div>
+      <label class="check"><input type="checkbox" id="dedupeChk" checked /> ตัดชื่อซ้ำอัตโนมัติ</label>
+      <button id="bulkAddBtn" class="btn-secondary" type="button">+ เพิ่มเข้าวงนี้</button>
+
+      <div class="split-box">
+        <h3>🔀 สุ่มแบ่งกลุ่ม</h3>
+        <div class="split-row">
+          <select id="splitMode" aria-label="วิธีแบ่ง">
+            <option value="groups">แบ่งเป็นกี่กลุ่ม</option>
+            <option value="size">ไม่เกินกี่คนต่อกลุ่ม</option>
+          </select>
+          <input id="splitNum" type="number" min="1" value="4" inputmode="numeric" aria-label="จำนวน" />
+        </div>
+        <button id="splitBtn" class="spin-btn" type="button">🔀 สุ่มแบ่งกลุ่ม</button>
+        <p class="bulk-hint">ถ้าช่องวางรายชื่อว่างอยู่ แอปจะเอาชื่อทั้งหมดที่มีอยู่มาสับแบ่งกลุ่มใหม่</p>
+      </div>
+    </div>
+
+    <!-- Names in the active group -->
+    <div class="panel">
+      <h2>รายชื่อในวงนี้</h2>
+      <div class="add-row">
+        <input id="nameInput" type="text" placeholder="พิมพ์ชื่อแล้วกด Enter หรือ +" />
+        <button id="addBtn" type="button">+ เพิ่ม</button>
+      </div>
+      <p class="bulk-hint">เคล็ดลับ: พิมพ์หลายชื่อคั่นด้วยจุลภาค (,) เพื่อเพิ่มทีเดียว</p>
+
+      <ul id="namesList" class="names-list"></ul>
+      <p id="emptyMsg" class="empty-msg" style="display:none;">ยังไม่มีชื่อ เพิ่มอย่างน้อย 2 ชื่อเพื่อเริ่มหมุน</p>
+
+      <div class="panel-footer">
+        <span id="countLabel">ทั้งหมด 0 ชื่อ</span>
+        <button id="clearAllBtn" type="button">ล้างชื่อในวงนี้</button>
+      </div>
+    </div>
+
+    <!-- Summary of all groups -->
+    <details class="panel" id="summaryPanel">
+      <summary>📑 สรุปทุกกลุ่ม</summary>
+      <div id="summaryBody" class="summary-body"></div>
+      <button id="copyAllBtn" class="btn-secondary" type="button">📋 คัดลอกผลทั้งหมด (วางใน Excel ได้)</button>
+    </details>
+
+    <footer class="credit">ทำงานได้แบบออฟไลน์ • ติดตั้งลงหน้าจอโฮมได้ (PWA)</footer>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- Winner Modal -->
+  <div id="modalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="trophy">🎉</div>
+      <h3>ผู้โชคดีคือ</h3>
+      <div class="winner-group" id="winnerGroup"></div>
+      <div class="winner-name" id="winnerName">-</div>
+      <div class="modal-actions">
+        <button id="keepBtn" class="btn-keep" type="button">เก็บไว้ในวง</button>
+        <button id="removeBtn" class="btn-remove" type="button">นำออกจากวง</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>

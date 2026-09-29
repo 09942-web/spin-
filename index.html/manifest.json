@@ -1,0 +1,42 @@
+{
+  "name": "วงล้อสุ่มชื่อ - Wheel of Names",
+  "short_name": "วงล้อสุ่ม",
+  "description": "แอปวงล้อสุ่มชื่อ เพิ่มชื่อ หมุนวงล้อ และสุ่มผู้โชคดี",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a1a2e",
+  "theme_color": "#4D96FF",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "id": "./",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone"
+  ]
+}
